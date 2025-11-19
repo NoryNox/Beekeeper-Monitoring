@@ -1,0 +1,82 @@
+# backend/main.py
+from fastapi import FastAPI, Form
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import sqlite3
+from twilio.rest import Client
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Twilio-Daten (kostenloses Testkonto reicht für 100 SMS/Monat)
+TWILIO_SID = "deine_sid"
+TWILIO_TOKEN = "dein_token"
+TWILIO_FROM = "+15005550006"  # Twilio-Testnummer
+
+client = Client(TWILIO_SID, TWILIO_TOKEN)
+
+# Datenbank anlegen
+conn = sqlite3.connect("imker.db", check_same_thread=False)
+conn.execute("""CREATE TABLE IF NOT EXISTS imker (
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    phone TEXT UNIQUE,
+    lat REAL,
+    lon REAL,
+    registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)""")
+conn.commit()
+
+class Imker(BaseModel):
+    name: str
+    phone: str
+    lat: float
+    lon: float
+
+@app.get("/", response_class=HTMLResponse)
+async def home():
+    return """
+    <h1>Beekeeper Monitor – Imker registrieren</h1>
+    <form action="/register" method="post">
+        Name: <input name="name" required><br>
+        Handy (E.164, z.B. +49123456789): <input name="phone" required><br>
+        <button type="submit">Registrieren & Alarme empfangen</button>
+    </form>
+    """
+
+@app.post("/register")
+async def register(name: str = Form(...), phone: str = Form(...)):
+    # Aktuelle Position vom Browser holen (optional)
+    try:
+        conn.execute("INSERT INTO imker (name, phone) VALUES (?, ?)", (name, phone))
+        conn.commit()
+        return {"status": "success", "message": f"{name} registriert!"}
+    except:
+        return {"status": "error", "message": "Nummer schon registriert"}
+
+@app.post("/api/alert")
+async def alert(data: dict):
+    image_base64 = data.get("image", "")
+    lat = data.get("lat")
+    lon = data.get("lon")
+    message = "⚠️ ASIATISCHE HORNISSE ERKANNT! Foto im Anhang"
+
+    # Alle Imker benachrichtigen (optional nur in 50 km Radius)
+    cursor = conn.execute("SELECT phone, name FROM imker")
+    for row in cursor:
+        phone, name = row
+        client.messages.create(
+            body=message,
+            from_=TWILIO_FROM,
+            to=phone,
+            media_url=[f"data:image/jpeg;base64,{image_base64}"] if image_base64 else None
+        )
+    return {"status": "SMS an alle gesendet"} GG
