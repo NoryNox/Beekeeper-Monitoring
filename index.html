@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Beekeeper Monitor – Hornissen-Wächter</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png">
+  <style>
+    body {font-family: Arial; background:#111; color:#FFD700; text-align:center; margin:0; padding:20px;}
+    button {background:#FFD700; color:#000; font-size:1.5em; padding:20px; margin:15px; border:none; border-radius:12px; width:90%;}
+    video, canvas {width:100%; max-width:640px; border:4px solid #FFD700; border-radius:12px;}
+    canvas {position:absolute; top:0; left:50%; transform:translateX(-50%);}
+  </style>
+</head>
+<body>
+  <h1>Beekeeper Monitor</h1>
+  <p>Asiatische Hornisse live erkennen – offline!</p>
+  <button onclick="location='hornet.html'">Hornissen-Wächter starten</button>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+  </script>
+</body>
+</html>
