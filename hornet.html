@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>Hornissen-Wächter</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <!-- Hier kommt später dein YOLO-Modell aus hornet3000 rein -->
+  <style>body{background:#000;margin:0} video,canvas{width:100%;max-width:640px}</style>
+</head>
+<body>
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
+  <h2 style="color:#FFD700">Starte die Kamera – Hornissen werden rot umrandet!</h2>
+
+  <script>
+    navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
+      .then(s => video.srcObject = s);
+    // Hier kommt später dein hornet3000-Modell-Code rein
+  </script>
+</body>
+</html>
