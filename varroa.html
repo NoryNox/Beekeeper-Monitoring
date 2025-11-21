@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>Varroa-Milben</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4"></script>
+  <style>
+    body{background:#000;color:#FFD700;margin:0;padding:20px;text-align:center}
+    video,canvas{width:100%;max-width:640px;border:4px solid #FFD700;border-radius:12px}
+    canvas{position:absolute;top:0;left:50%;transform:translateX(-50%)}
+    #info{position:fixed;bottom:0;width:100%;background:rgba(0,0,0,0.9);padding:15px;font-size:1.5em}
+    .alarm{color:#FF0000;animation:blink 1s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0.5}}
+  </style>
+</head>
+<body>
+  <h1>Varroa-Milben-Erkennung</h1>
+  <video id="v" autoplay playsinline muted></video>
+  <canvas id="c"></canvas>
+  <div id="info">Lade Modell...</div>
+
+  <script>
+    navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(s=>v.srcObject=s);
+    v.onloadedmetadata = async () => {
+      c.width = v.videoWidth; c.height = v.videoHeight;
+      const ctx = c.getContext('2d');
+      const model = await tf.loadGraphModel('models/varroa/model.json');
+      info.textContent = "Varroa-Modell geladen – Zählung läuft";
+
+      setInterval(() => {
+        ctx.drawImage(v,0,0,c.width,c.height);
+        tf.tidy(() => {
+          const img = tf.browser.fromPixels(c).resizeBilinear([320,320]).expandDims(0).div(255);
+          model.executeAsync(img).then(p => {
+            let bees = 0, varroa = 0;
+            p[0].arraySync()[0].forEach(b => {
+              if (b[4] > 0.7) {
+                const color = b[5] === 0 ? "#00FF00" : "#FF0000";
+                const [x,y,w,h] = b.slice(0,4);
+                ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.strokeRect(x-w/2,y-h/2,w,h);
+                b[5] === 0 ? bees++ : varroa++;
+              }
+            });
+            const rate = bees ? (varroa/bees*100).toFixed(2) : 0;
+            info.innerHTML = `Bienen: ${bees} | Varroa: ${varroa} | Befall: ${rate}%`;
+            if (rate > 3) info.classList.add('alarm');
+            else info.classList.remove('alarm');
+          });
+        });
+      }, 1000);
+    };
+  </script>
+</body>
+</html>
