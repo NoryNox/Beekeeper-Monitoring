@@ -2,30 +2,32 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <title>Einstellungen</title>
+  <title>Kamera & Modell einstellen</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
     body{background:#000;color:#FFD700;margin:0;padding:20px;font-family:Arial;text-align:center}
-    input, select, button{width:90%;padding:15px;margin:10px;font-size:1.2em;border-radius:12px}
+    h1{font-size:2em}
+    input, select, button{width:90%;padding:15px;margin:10px auto;font-size:1.2em;border-radius:12px;display:block}
     input, select{background:#333;color:#FFD700;border:none}
-    button{background:#FFD700;color:#000;border:none}
+    button{background:#FFD700;color:#000;border:none;cursor:pointer}
+    .example{font-size:0.9em;color:#aaa;margin:5px}
     .logo-row{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;margin:20px}
     .logo-item{text-align:center;font-size:0.9em}
     .logo-item img{width:80px;height:80px}
   </style>
 </head>
 <body>
-  <h1>Einstellungen</h1>
+  <h1>Kamera & Modell einstellen</h1>
 
-  <select id="model" onchange="showFields()">
-    <option value="">-- Kamera wählen --</option>
-    <option value="local">Lokale Webcam</option>
-    <option value="raspberry">Raspberry Pi</option>
+  <select id="model" onchange="showManual()">
+    <option value="local">Lokale Webcam (Handy/PC)</option>
     <option value="tapo">TP-Link Tapo</option>
     <option value="reolink">Reolink</option>
     <option value="instar">INSTAR</option>
     <option value="hikvision">Hikvision</option>
-    <option value="custom">Andere RTSP/MJPEG</option>
+    <option value="eufy">Eufy</option>
+    <option value="esp32">ESP32-CAM</option>
+    <option value="custom">Andere (RTSP/MJPEG)</option>
   </select>
 
   <div class="logo-row">
@@ -36,41 +38,56 @@
     <div class="logo-item"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NSIgZmlsbD0iIzQwY2Q0MCIvPjx0ZXh0IHg9IjUwIiB5PSI2MCIgZm9udC1zaXplPSI0MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlQ8L3RleHQ+PC9zdmc+"><br>Tapo</div>
   </div>
 
-  <div id="fields" style="display:none">
-    <input id="ip" placeholder="IP (z.B. 192.168.1.100)">
-    <input id="user" placeholder="Benutzer (meist admin)" value="admin">
+  <div id="manual">
+    <input id="ip" placeholder="IP-Adresse (z.B. 192.168.1.100)">
+    <div class="example">Beispiel Tapo: 192.168.1.100</div>
+    <input id="user" value="admin" placeholder="Benutzer">
     <input id="pass" type="password" placeholder="Passwort">
-    <input id="customUrl" placeholder="RTSP/MJPEG-URL (bei Custom)">
-    <input id="cameraName" placeholder="Name dieser Kamera (z.B. Stock Eiche)">
-    <label><input type="checkbox" id="sms"> SMS-Alarme für diese Kamera</label>
-    <button onclick="save()">Speichern & zurück</button>
+    <div class="example">Tapo: Passwort aus der App<br>Reolink: aus Reolink-App<br>INSTAR: aus Web-Interface</div>
+    <input id="customUrl" placeholder="Oder direkte URL (RTSP/MJPEG)">
+    <div class="example">Beispiel Tapo: rtsp://admin:passwort@192.168.1.100:554/stream1<br>Reolink: http://192.168.1.50/cgi-bin/api.cgi?cmd=Snap&channel=0&rs=wow&user=admin&password=pass</div>
+
+    <button onclick="saveManual()">Speichern & starten</button>
   </div>
 
   <script>
-    function showFields() {
-      document.getElementById('fields').style.display = model.value ? 'block' : 'none';
+    function showManual() {
+      document.getElementById('manual').style.display = 'block';
     }
 
-    function save() {
-      const m = model.value;
-      let url = "";
-      if (m === "local" || m === "raspberry") url = "local";
-      if (m === "tapo") url = `rtsp://${user.value}:${pass.value}@${ip.value}:554/stream1`;
-      if (m === "reolink") url = `http://${ip.value}/cgi-bin/api.cgi?cmd=Snap&channel=0&rs=wow&user=${user.value}&password=${pass.value}`;
-      if (m === "instar") url = `http://${ip.value}/tmpfs/snap.jpg`;
-      if (m === "hikvision") url = `rtsp://${user.value}:${pass.value}@${ip.value}:554/Streaming/Channels/101`;
-      if (m === "custom") url = customUrl.value;
+    function saveManual() {
+      const ip = document.getElementById('ip').value.trim();
+      const user = document.getElementById('user').value.trim();
+      const pass = document.getElementById('pass').value;
+      const custom = document.getElementById('customUrl').value.trim();
+
+      let url = custom || "";
+
+      if (!custom && ip) {
+        const model = document.getElementById('model').value;
+        if (model === "tapo") url = `rtsp://${user}:${pass}@${ip}:554/stream1`;
+        if (model === "reolink") url = `http://${ip}/cgi-bin/api.cgi?cmd=Snap&channel=0&rs=wow&user=${user}&password=${pass}`;
+        if (model === "instar") url = `http://${ip}/tmpfs/snap.jpg`;
+        if (model === "hikvision") url = `rtsp://${user}:${pass}@${ip}:554/Streaming/Channels/101`;
+        if (model === "eufy") url = `rtsp://${user}:${pass}@${ip}:554/unicast`;
+      }
+
+      if (!url) {
+        alert("Bitte IP + Passwort oder direkte URL eingeben");
+        return;
+      }
 
       localStorage.setItem('cameraUrl', url);
-      localStorage.setItem('cameraName', cameraName.value || "Kamera");
-      localStorage.setItem('wantSMS', sms.checked);
-      alert("Kamera gespeichert!");
+      localStorage.setItem('cameraName', ip || "Meine Kamera");
+      alert("Kamera gespeichert! Starte Erkennung...");
       location.href = "index.html";
     }
 
-    // Beim Laden prüfen
-    if (localStorage.getItem('cameraUrl')) {
-      document.body.innerHTML = "<h1>Kamera eingerichtet</h1><button onclick=\"location='index.html'\">Zurück</button>";
+    // Beim ersten Start immer manuell fragen
+    if (!localStorage.getItem('cameraUrl')) {
+      showManual();
+    } else {
+      document.body.innerHTML = "<h1>Kamera bereits eingerichtet</h1><button onclick=\"location='index.html'\">Zurück zur App</button>";
     }
   </script>
 </body>
