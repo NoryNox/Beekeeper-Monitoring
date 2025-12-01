@@ -1,0 +1,14 @@
+beekeeper-monitoring/
+├── README.md                  # Aktualisiertes README (unten)
+├── .gitignore                 # Unverändert
+├── docs/                      # GH Pages
+│   ├── index.html             # Umbenannte PWA (unten)
+│   ├── manifest.json          # Update: Name zu "Beekeeper Monitoring"
+│   ├── sw.js                  # Update: Cache-Name zu 'beekeeper-v2'
+│   └── models/                # Unverändert (hornet-yolov10/ etc. – optional umbenennen zu beekeeper/)
+├── src/                       # Unverändert, aber Texte angepasst
+│   ├── train_multimodal.py    # Update: Prints/Comments zu "Beekeeper"
+│   ├── app.py                 # Update: Logs zu "Beekeeper"
+│   └── requirements.txt       # Unverändert
+├── docker/                    # Update: Dockerfile-Name zu beekeeper-monitoring
+└── .github/workflows/         # Update: deploy.yml zu beekeeper
