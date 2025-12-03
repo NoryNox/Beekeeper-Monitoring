@@ -3,7 +3,7 @@ Monitor
 Offline-fähige PWA für Imker: Hornisse, Varroa, Drohnenbrut, Pollen, Schwarm, Königin.
 
 ## Installation
-1. Öffne https://norynox.github.io/hornet3000/
+1. Öffne https://norynox.github.io/Beekeeper-Monitoring/)
 2. Installiere als App.
 
 ## Features
