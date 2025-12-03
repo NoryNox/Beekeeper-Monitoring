@@ -1,26 +1,155 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-  <title>Beekeeper Monitor</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="assets/icon.png">
-  <style>
-    body {margin:0;background:#000;color:#FFD700;font-family:Arial;text-align:center;padding:20px;}
-    button {background:#FFD700;color:#000;border:none;padding:20px;margin:10px;font-size:1.5em;border-radius:10px;width:90%;}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beekeeper Monitoring: Deine Bienen-App</title>
+    <meta name="description" content="Echtzeit-Überwachung für Imker: Hornissen, Varroa & mehr. Einfach & offline.">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f0f8ff; text-align: center; }
+        header { background: #4CAF50; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        section { margin: 20px 0; padding: 20px; background: white; border-radius: 8px; max-width: 800px; margin: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        #video { width: 100%; max-width: 640px; border: 2px solid #4CAF50; border-radius: 8px; }
+        #canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
+        button { padding: 12px 20px; margin: 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #45a049; }
+        .alert { color: red; font-weight: bold; padding: 10px; background: #ffebee; border-radius: 5px; margin: 10px 0; }
+        .dashboard { background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 20px auto; max-width: 640px; }
+        #loading { color: #4CAF50; font-size: 18px; }
+        #history { max-height: 150px; overflow-y: auto; text-align: left; background: white; padding: 10px; border-radius: 5px; margin-top: 10px; }
+        .info-box { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@latest"></script>
 </head>
 <body>
-  <h1>Beekeeper Monitor</h1>
-  <button onclick="location='hornisse.html'">Hornissen-Wächter</button>
-  <button onclick="location='varroa.html'">Varroa-Milbe</button>
-  <button onclick="location='drohnenbrut.html'">Drohnenbrut</button>
-  <button onclick="location='pollen.html'">Pollen-Analyse</button>
-  <button onclick="location='schwarm.html'">Schwarm-Erkennung</button>
-  <button onclick="location='queen.html'">Königinnenerkennung</button>
-  <script>
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
-  </script>
+    <header>
+        <h1>🐝 Beekeeper Monitoring</h1>
+        <p>Deine KI-App für Bienenstöcke: Erkennt Bedrohungen in Echtzeit. Einfach, offline, hilfreich.</p>
+    </header>
+
+    <section id="info">
+        <h2>Was die App kann</h2>
+        <div class="info-box">
+            <p>Überwache Hornissen, Varroa-Milben & Schwärme per Kamera + Mikrofon. Alarme & Logs – alles lokal auf deinem Gerät.</p>
+            <ul style="text-align: left;">
+                <li>🔍 Echtzeit-Detektion (Bild + Sound).</li>
+                <li>🔔 Push-Alarme bei Gefahr.</li>
+                <li>📱 Offline-PWA (installierbar).</li>
+                <li>💾 Logs exportieren für Reports.</li>
+            </ul>
+            <p><strong>Tipp:</strong> Starte mit Kamera – die App lernt von dir!</p>
+        </div>
+    </section>
+
+    <div id="loading">App lädt... (Modelle kommen später – funktioniert schon als Demo!)</div>
+    <div id="controls">
+        <button id="startBtn">🚀 Kamera & Mikrofon starten</button>
+        <button id="stopBtn" style="display:none;">⏹ Stop</button>
+        <button id="exportLogs" style="background: #2196F3;">📤 Logs exportieren</button>
+        <button id="darkToggle" style="background: #9E9E9E;">🌙 Dark Mode</button>
+        <div id="weather" style="margin: 10px; font-size: 14px;">Wetter-Simulation: 18°C – Hohe Aktivität! ⚠️</div>
+    </div>
+    <div style="position: relative; display: inline-block; margin: 20px 0;">
+        <video id="video" autoplay playsinline muted style="border-radius: 8px;"></video>
+        <canvas id="canvas" style="position: absolute; top: 0; left: 0; pointer-events: none;"></canvas>
+    </div>
+    <div id="result" class="alert" style="display: none;">Demo-Alarm: Hornisse erkannt! (Klick Start für Real.)</div>
+    
+    <div class="dashboard">
+        <h3>Dashboard</h3>
+        <p>Status: <span id="status">Bereit</span> | Detektionen: <span id="detections">0</span> | Alarme: <span id="alarms">0</span></p>
+        <h4>Letzte Events</h4>
+        <div id="history">Keine Logs – starte die App!</div>
+    </div>
+
+    <script>
+        // Einfache Demo-Version – erweitere später mit TF.js-Modellen
+        let video = document.getElementById('video');
+        let canvas = document.getElementById('canvas');
+        let ctx = canvas.getContext('2d');
+        let stream, isRunning = false, logs = JSON.parse(localStorage.getItem('beekeeperLogs') || '[]'), alarmCounter = 0;
+        let detectionsList = document.getElementById('detections'), alarmsCount = document.getElementById('alarms'), statusEl = document.getElementById('status');
+
+        // UI-Updates
+        function updateHistory() {
+            document.getElementById('history').innerHTML = logs.length > 0 ? logs.slice(0, 5).map(log => `<div>${log.timestamp}: ${log.event}</div>`).join('') : 'Keine Logs – starte!';
+        }
+        function addLog(event) {
+            logs.unshift({ timestamp: new Date().toLocaleString(), event });
+            if (logs.length > 50) logs = logs.slice(0, 50);
+            localStorage.setItem('beekeeperLogs', JSON.stringify(logs));
+            updateHistory();
+        }
+        updateHistory();
+
+        document.getElementById('exportLogs').onclick = () => {
+            const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = 'beekeeper-logs.json'; a.click();
+            addLog('Logs exportiert');
+        };
+
+        document.getElementById('darkToggle').onclick = () => {
+            document.body.classList.toggle('dark');
+            addLog('Dark Mode gewechselt');
+        };
+
+        // Start/Stop
+        document.getElementById('startBtn').onclick = async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: true });
+                video.srcObject = stream;
+                video.onloadedmetadata = () => {
+                    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+                    detectLoop();  // Demo-Loop
+                };
+                document.getElementById('startBtn').style.display = 'none';
+                document.getElementById('stopBtn').style.display = 'inline';
+                isRunning = true; statusEl.innerText = 'Läuft! (Demo-Modus)';
+                addLog('App gestartet – Kamera & Mikrofon aktiv');
+                setTimeout(() => {  // Simulierter Alarm
+                    document.getElementById('result').style.display = 'block';
+                    alarmCounter++; alarmsCount.innerText = alarmCounter;
+                    if (Notification.permission === 'granted') new Notification('Beekeeper Alarm!', { body: 'Bedrohung erkannt!' });
+                    addLog('Demo-Alarm getriggert');
+                }, 3000);
+            } catch (err) {
+                alert('Kamera/Mikrofon-Zugriff fehlgeschlagen: ' + err.message + '. Erlaube's im Browser.');
+            }
+        };
+
+        document.getElementById('stopBtn').onclick = () => {
+            if (stream) stream.getTracks().forEach(track => track.stop());
+            document.getElementById('startBtn').style.display = 'inline';
+            document.getElementById('stopBtn').style.display = 'none';
+            isRunning = false; statusEl.innerText = 'Gestoppt';
+            addLog('App gestoppt');
+        };
+
+        // Demo-Loop (simuliert Detektion)
+        function detectLoop() {
+            if (isRunning && video.readyState === 4) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // Simuliere Box
+                ctx.strokeStyle = 'red'; ctx.lineWidth = 3;
+                ctx.strokeRect(100, 100, 200, 150);
+                ctx.fillStyle = 'red'; ctx.font = '20px Arial';
+                ctx.fillText('Demo: Hornisse (85%)', 110, 95);
+                detectionsList.innerText = '1 (Demo)';
+            }
+            requestAnimationFrame(detectLoop);
+        }
+
+        // Notification
+        if (Notification.permission === 'default') Notification.requestPermission();
+
+        // Cleanup
+        window.onbeforeunload = () => { if (stream) stream.getTracks().forEach(track => track.stop()); };
+        addLog('App geladen – bereit zum Starten!');
+        document.getElementById('loading').style.display = 'none';
+    </script>
 </body>
 </html>
