@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beekeeper Monitoring: Deine Bienen-App</title>
-    <meta name="description" content="Echtzeit-Überwachung für Imker: Hornissen, Varroa & mehr. Mit SMS-Alarm!">
+    <meta name="description" content="Echtzeit-Überwachung für Imker: Hornissen, Varroa & mehr. Einfach & offline.">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4CAF50">
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f0f8ff; text-align: center; }
-        body.dark { background: #1a1a1a; color: #fff; }
+        body.dark { background: #121212; color: #e0e0e0; }
         header { background: #4CAF50; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
         section { margin: 20px 0; padding: 20px; background: white; border-radius: 8px; max-width: 800px; margin: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        body.dark section { background: #333; }
+        body.dark section { background: #1e1e1e; }
         #video { width: 100%; max-width: 640px; border: 2px solid #4CAF50; border-radius: 8px; }
         #canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
         button { padding: 12px 20px; margin: 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
@@ -20,10 +20,10 @@
         .sms-btn { background: #FF5722 !important; }
         .alert { color: red; font-weight: bold; padding: 10px; background: #ffebee; border-radius: 5px; margin: 10px 0; }
         .dashboard { background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 20px auto; max-width: 640px; }
-        body.dark .dashboard { background: #444; }
+        body.dark .dashboard { background: #1a1a1a; }
         #loading { color: #4CAF50; font-size: 18px; }
         #history { max-height: 150px; overflow-y: auto; text-align: left; background: white; padding: 10px; border-radius: 5px; margin-top: 10px; }
-        body.dark #history { background: #555; }
+        body.dark #history { background: #1a1a1a; }
         .info-box { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 10px 0; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
@@ -32,7 +32,7 @@
 <body>
     <header>
         <h1>🐝 Beekeeper Monitoring</h1>
-        <p>Deine KI-App für Bienenstöcke: Erkennt Bedrohungen in Echtzeit. Mit SMS-Alarm!</p>
+        <p>Deine KI-App für Bienenstöcke: Erkennt Bedrohungen in Echtzeit. Einfach, offline, hilfreich.</p>
     </header>
 
     <section id="info">
@@ -44,17 +44,15 @@
                 <li>🔔 Push-Alarme bei Gefahr.</li>
                 <li>📱 Offline-PWA (installierbar).</li>
                 <li>💾 Logs exportieren für Reports.</li>
-                <li>📱 <strong>Neu: SMS-Alarm</strong> (gratis via Fast2SMS).</li>
             </ul>
             <p><strong>Tipp:</strong> Starte mit Kamera – die App lernt von dir!</p>
         </div>
     </section>
 
-    <div id="loading">App lädt... (YOLOv10n initialisiert.)</div>
+    <div id="loading">App lädt... (Falls Modell fehlt, nutzt Fallback.)</div>
     <div id="controls">
         <button id="startBtn">🚀 Kamera & Mikrofon starten</button>
         <button id="stopBtn" style="display:none;">⏹ Stop</button>
-        <button id="smsTestBtn" class="sms-btn">📱 SMS-Alarm testen</button>
         <button id="exportLogs" style="background: #2196F3;">📤 Logs exportieren</button>
         <button id="darkToggle" style="background: #9E9E9E;">🌙 Dark Mode</button>
         <div id="weather" style="margin: 10px; font-size: 14px;">Wetter-Simulation: 18°C – Hohe Aktivität! ⚠️</div>
@@ -63,7 +61,7 @@
         <video id="video" autoplay playsinline muted style="border-radius: 8px;"></video>
         <canvas id="canvas" style="position: absolute; top: 0; left: 0; pointer-events: none;"></canvas>
     </div>
-    <div id="result" class="alert" style="display: none;">Alarm: Bedrohung erkannt!</div>
+    <div id="result" class="alert" style="display: none;">Demo-Alarm: Hornisse erkannt! (Klick Start für Real.)</div>
     
     <div class="dashboard">
         <h3>Dashboard</h3>
@@ -74,7 +72,6 @@
 
     <script>
         const API_ENDPOINT = 'http://localhost:5000/api/alarm';  // Backend
-        const MODEL_URL = 'models/yolov10n_tfjs/model.json';  // Dein Modell
 
         let model, video = document.getElementById('video'), canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
         let stream, animationId, isRunning = false, logs = JSON.parse(localStorage.getItem('beekeeperLogs') || '[]'), alarmCounter = 0;
@@ -104,32 +101,14 @@
             addLog('Dark Mode gewechselt');
         };
 
-        // SMS-Test
-        document.getElementById('smsTestBtn').onclick = async () => {
-            try {
-                const response = await fetch(API_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ score: 0.85, message: 'Test-Alarm' })
-                });
-                const data = await response.json();
-                document.getElementById('result').innerHTML = `SMS gesendet! ${data.message}`;
-                addLog('SMS getestet');
-            } catch (err) {
-                alert('Backend nicht gestartet – run python src/app.py');
-            }
-        };
-
         // Modell laden
         async function loadModel() {
             try {
                 tf.setBackend('webgl'); await tf.ready();
-                model = await tf.loadGraphModel(MODEL_URL);
-                statusEl.innerText = 'YOLOv10n geladen!';
-            } catch (error) {
-                console.warn('Custom-Modell fehlt – Fallback zu YOLOv8n');
                 model = await tf.loadGraphModel('https://tfhub.dev/google/tfjs-model/yolov8n-detection/1/default/1', { fromTFHub: true });
-                statusEl.innerText = 'Fallback-Modell geladen';
+                statusEl.innerText = 'Modell geladen!';
+            } catch (error) {
+                statusEl.innerText = 'Demo-Modus';
             }
             document.getElementById('loading').innerHTML = 'Bereit – starte Kamera!';
             addLog('Modell geladen');
@@ -139,7 +118,7 @@
         document.getElementById('startBtn').onclick = async () => {
             if (!model) await loadModel();
             try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: true });
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 video.srcObject = stream;
                 video.onloadedmetadata = () => {
                     canvas.width = video.videoWidth; canvas.height = video.videoHeight;
