@@ -35,7 +35,7 @@
         <p>Damit du SMS-Alarme bekommst, brauche ich nur deine Daten – sie bleiben <strong>nur auf deinem Gerät</strong> gespeichert.</p>
 
         <div id="step1">
-            <h3>Schritt 1: Deine E-Mail (optional, zum Merken)</h3>
+            <h3>Schritt 1: Deine E-Mail (optional)</h3>
             <input type="email" id="email" placeholder="deine@email.de (optional)" />
             <button onclick="goToStep2()" class="next-btn">Weiter zur Nummer</button>
         </div>
@@ -74,7 +74,6 @@
 
         function goToStep2() {
             const email = document.getElementById('email').value.trim();
-            if (email && !email.includes('@')) return alert('Bitte gültige E-Mail eingeben');
             localStorage.setItem('beekeeper_email', email || 'anonym');
             document.getElementById('step1').style.display = 'none';
             document.getElementById('step2').style.display = 'block';
@@ -82,18 +81,19 @@
 
         function completeRegistration() {
             const phone = document.getElementById('phone').value.trim();
-            if (!phone || !phone.match(/^\+49[1-9][0-9]{8,11}$/)) {
-                return alert('Bitte gültige deutsche Nummer eingeben (+49...)');
+            if (!phone.match(/^\+49[1-9][0-9]{8,11}$/)) {
+                alert('Bitte gültige deutsche Nummer mit +49 eingeben');
+                return;
             }
             localStorage.setItem('beekeeper_phone', phone);
             localStorage.setItem('beekeeper_registered', 'true');
             document.getElementById('registerCard').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
-            document.getElementById('status').textContent = `Willkommen! SMS-Alarme gehen an ${phone}`;
+            document.getElementById('status').textContent = `Willkommen! SMS-Alarme an ${phone}`;
             start();
         }
 
-        // Auto-Login bei erneutem Besuch
+        // Automatischer Login bei erneutem Besuch
         if (localStorage.getItem('beekeeper_registered') === 'true') {
             document.getElementById('registerCard').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
@@ -120,7 +120,7 @@
             running = false;
         }
 
-        function toggleDark() { document.body.classList.toggle('dark');
+        function toggleDark() { document.body.classList.toggle('dark'); }
 
         function loop() {
             if (!running) return;
@@ -150,7 +150,7 @@
             const carrier = num.startsWith('170')||num.startsWith('171')||num.startsWith('175') ? 'sms.telekom.de' :
                            num.startsWith('172')||num.startsWith('178') ? 'sms.vodafone.de' :
                            num.startsWith('176') ? 'o2online.de' : 'sms.telekom.de';
-            location.href = `mailto:${num}@${carrier}?subject=ALARM&body=Hornisse erkannt! Sofort prüfen!`;
+            location.href = `mailto:${num}@${carrier}?subject=HORNISSEN-ALARM&body=Hornisse erkannt! Sofort prüfen!`;
         }
     </script>
 </body>
