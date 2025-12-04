@@ -1,0 +1,5 @@
+# Keine sensiblen Dateien hochladen
+.env
+*.key
+*.pem
+.DS_Store
