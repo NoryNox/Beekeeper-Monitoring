@@ -27,7 +27,6 @@
         #loading { font-size:20px; color:#27ae60; margin:30px; }
         #history { background:white; padding:12px; border-radius:12px; max-height:180px; overflow-y:auto; text-align:left; margin-top:10px; }
         body.dark #history { background:#1e1e1e; }
-        .info-box { background:#fff3cd; border:1px solid #ffeaa7; padding:15px; border-radius:12px; margin:10px 0; }
         .guide { background:#e8f5e8; border:1px solid #c8e6c9; padding:15px; border-radius:12px; margin:10px 0; text-align:left; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
@@ -111,18 +110,18 @@
         <h2>Bau-Anleitung (Raspberry Pi)</h2>
         <div class="guide">
             <p><strong>Hardware:</strong> Raspberry Pi 4 + Arducam-Kamera + 5V-Netzteil.</p>
-            <p><strong>Setup:</strong> Raspbian installieren > `sudo apt update` > `pip install opencv-python ultralytics`.</p>
-            <p><strong>Code:</strong> `python src/train_multimodal.py` (trainiert Modell).</p>
+            <p><strong>Setup:</strong> Raspbian installieren > `sudo apt update` > `pip install ultralytics opencv-python`.</p>
+            <p><strong>Training:</strong> `python src/train_multimodal.py` (Dataset von Kaggle).</p>
             <p><strong>Start:</strong> `python src/app.py` – Kamera läuft, Alarme per SMS.</p>
-            <p><strong>Download:</strong> Dataset von Kaggle (Vespa Velutina).</p>
+            <p><strong>Download:</strong> Dataset: Kaggle Vespa Velutina.</p>
         </div>
 
         <h2>Nutzungs-Anleitung</h2>
         <div class="guide">
-            <p><strong>1. App öffnen:</strong> Klick "Kamera starten" – erlaube Zugriff.</p>
-            <p><strong>2. Überwachen:</strong> Richte Kamera auf Bienenstock – App erkennt Bedrohungen automatisch.</p>
-            <p><strong>3. Alarm:</strong> Bei Erkennung rote Box + SMS an deine Nummer.</p>
-            <p><strong>4. Logs:</strong> "Logs exportieren" – speichert als JSON für Reports.</p>
+            <p><strong>1. App öffnen:</strong> Registrierung (einmalig).</p>
+            <p><strong>2. Kamera starten:</strong> Erlaube Zugriff – richte auf Stock.</p>
+            <p><strong>3. Alarm:</strong> Rote Box + SMS bei Bedrohung.</p>
+            <p><strong>4. Logs:</strong> "Logs exportieren" – JSON für Reports.</p>
             <p><strong>5. Offline:</strong> Installiere als App – läuft ohne Internet.</p>
         </div>
     </section>
