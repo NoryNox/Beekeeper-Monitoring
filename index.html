@@ -4,67 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beekeeper Monitoring – 6 Bedrohungen Live</title>
-    <meta name="description" content="KI für Imker: Erkennt Hornissen, Varroa, Drohnenbrut, Pollenmangel, Schwarm & Königin – mit SMS-Alarm">
+    <meta name="description" content="KI-App für Imker: Erkennt Hornisse, Varroa, Drohnenbrut, Pollenmangel, Schwarm & Königin – mit SMS-Alarm">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a5f1a">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🐝%3C/text%3E%3C/svg%3E">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&display=swap');
-        :root { --primary: #1a5f1a; --accent: #27ae60; --danger: #c62828; }
-        body { font-family: 'Roboto', sans-serif; margin:0; padding:0; background:#f8f9fa; color:#2d3436; min-height:100vh; }
-        body.dark { background:#0d1117; color:#e6edf3; }
-        header { background:var(--primary); color:white; padding:30px; text-align:center; border-radius:0 0 30px 30px; box-shadow:0 10px 30px rgba(0,0,0,0.2); }
+        :root { --bg: #f8f9fa; --card: white; --text: #2d3436; --primary: #1a5f1a; --accent: #27ae60; }
+        body.dark { --bg: #0d1117; --card: #161b22; --text: #e6edf3; }
+        body { font-family: 'Roboto', sans-serif; margin:0; padding:0; background:var(--bg); color:var(--text); min-height:100vh; transition:0.3s; }
+        header { background:var(--primary); color:white; padding:35px; text-align:center; border-radius:0 0 30px 30px; box-shadow:0 10px 30px rgba(0,0,0,0.2); }
         body.dark header { background:#8B0000; }
-        h1 { font-family:'Poppins',sans-serif; font-size:38px; margin:0; }
+        h1 { font-family:'Poppins',sans-serif; font-size:42px; margin:0; }
         .container { max-width:700px; margin:0 auto; padding:20px; }
-        .card { background:white; border-radius:20px; padding:30px; margin:25px 0; box-shadow:0 15px 40px rgba(0,0,0,0.1); }
-        body.dark .card { background:#ffffff; }
-        body.dark .card { background:#161b22; border:1px solid #30363d; }
+        .card { background:var(--card); border-radius:1px solid #ddd; border-radius:20px; padding:35px; margin:30px 0; box-shadow:0 15px 40px rgba(0,0,0,0.1); }
+        body.dark .card { border-color:#30363d; }
         input { width:90%; padding:18px; font-size:18px; border:2px solid #ddd; border-radius:16px; margin:15px 0; }
-        button { background:var(--accent); color:white; padding:18px 36px; font-size:18px; border:none; border-radius:16px; margin:10px; cursor:pointer; box-shadow:0 8px 25px rgba(39,174,96,0.4); transition:0.3s; }
+        body.dark input { background:#0d1117; border-color:#444; color:white; }
+        button { background:var(--accent); color:white; padding:18px 36px; font-size:18px; border:none; border-radius:16px; margin:15px; cursor:pointer; box-shadow:0 8px 25px rgba(39,174,96,0.4); transition:0.3s; }
         button:hover { background:#1e8449; transform:translateY(-3px); }
         .btn-danger { background:#e74c3c !important; }
         #video { width:100%; max-width:680px; border:5px solid var(--accent); border-radius:20px; background:#000; }
         #canvas { position:absolute; top:0; left:50%; transform:translateX(-50%); pointer-events:none; border-radius:20px; }
-        .alert { padding:25px; border-radius:20px; margin:25px 0; font-size:22px; font-weight:bold; text-align:center; }
-        .hornet { background:#ffebee; color:#c62828; border:4px solid #ef9a9a; }
-        .varroa { background:#fff3e0; color:#ef6c00; border:4px solid #ff9800; }
-        .drone { background:#e8f5e8; color:#2e7d32; border:4px solid #4caf50; }
-        .pollen { background:#fffde7; color:#f9a825; border:4px solid #ffeb3b; }
-        .swarm { background:#e3f2fd; color:#1565c0; border:4px solid #2196f3; }
-        .queen { background:#f3e5f5; color:#6a1b9a; border:4px solid #9c27b0; }
-        body.dark .alert { background:#330000; color:#ff8888; }
-        .dashboard { background:#f1f8e9; border-radius:20px; padding:25px; margin:30px 0; }
+        .alert { padding:30px; border-radius:20px; margin:30px 0; font-size:26px; font-weight:bold; text-align:center; }
+        .hornet { background:#ffebee; color:#c62828; border:5px solid #ef9a9a; }
+        .varroa { background:#fff3e0; color:#ef6c00; border:5px solid #ff9800; }
+        .drone { background:#e8f5e8; color:#2e7d32; border:5px solid #4caf50; }
+        .pollen { background:#fffde7; color:#f9a825; border:5px solid #ffeb3b; }
+        .swarm { background:#e3f2fd; color:#1565c0; border:5px solid #2196f3; }
+        .queen { background:#f3e5f5; color:#6a1b9a; border:5px solid #9c27b0; }
+        .dashboard { background:#f1f8e9; border-radius:20px; padding:30px; margin:30px 0; }
         body.dark .dashboard { background:#161b22; }
-        #history { background:#f9f9f9; padding:20px; border-radius:16px; max-height:200px; overflow-y:auto; text-align:left; }
+        #history { background:#f9f9f9; padding:20px; border-radius:16px; max-height:250px; overflow-y:auto; text-align:left; }
         body.dark #history { background:#0d1117; }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
 </head>
 <body>
     <header>
         <h1>Beekeeper Monitoring</h1>
-        <p>KI erkennt 6 Bedrohungen – Hornisse · Varroa · Drohnenbrut · Pollenmangel · Schwarm · Königin</p>
+        <p>KI erkennt 6 Bedrohungen in Echtzeit – für deine Bienen</p>
     </header>
 
     <div class="container">
         <!-- Registrierung -->
         <div id="register" class="card">
-            <h2>Willkommen, Imker!</h2>
-            <p>Deine Daten bleiben <strong>nur auf deinem Gerät</strong> – 100% anonym!</p>
+            <h2>Willkommen!</h2>
+            <p>Deine Daten bleiben <strong>nur auf deinem Gerät</strong> – 100% anonym</p>
             <div id="step1">
-                <h3>Schritt 1: E-Mail (optional)</h3>
+                <h3>1. E-Mail (optional)</h3>
                 <input type="email" id="email" placeholder="deine@email.de" />
                 <button onclick="goToStep2()" class="next-btn">Weiter</button>
             </div>
             <div id="step2" style="display:none;">
-                <h3>Schritt 2: Handynummer für SMS-Alarme</h3>
+                <h3>2. Handynummer (für SMS-Alarme)</h3>
                 <input type="tel" id="phone" placeholder="+4915112345678" />
                 <button onclick="saveAndStart()">Speichern & starten</button>
             </div>
         </div>
 
-        <!-- Haupt-App -->
+        <!-- App -->
         <div id="app" style="display:none;">
             <div class="card">
                 <button onclick="start()">Kamera starten</button>
@@ -128,7 +126,7 @@
                     running = true;
                     loop();
                 };
-            } catch(e) { alert('Kamera-Zugriff verweigert'); }
+            } catch(e) { alert('Kamera-Zugriff verweigert – bitte erlauben!'); }
         }
 
         function stop() {
@@ -154,11 +152,11 @@
                 if (r > 150 && g < 100 && b > 150) purple++;     // Königin
             }
 
-            if (yellow > 5000) showAlarm('HORNISSE ERKANNT!', 'hornet');
-            else if (brown > 4000) showAlarm('VARROA-MILBE!', 'varroa');
-            else if (white > 6000) showAlarm('DROHNENBRUT ERKANNT!', 'drone');
-            else if (blue > 5000) showAlarm('SCHWARM ERKANNT!', 'swarm');
-            else if (purple > 3000) showAlarm('KÖNIGIN ERKANNT!', 'queen');
+            if (yellow > 5000) showAlarm('HORNISSE!', 'hornet');
+            else if (brown > 4000) showAlarm('VARROA!', 'varroa');
+            else if (white > 6000) showAlarm('DROHNENBRUT!', 'drone');
+            else if (blue > 5000) showAlarm('SCHWARM!', 'swarm');
+            else if (purple > 3000) showAlarm('KÖNIGIN!', 'queen');
 
             requestAnimationFrame(loop);
         }
