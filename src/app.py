@@ -1,17 +1,32 @@
 from flask import Flask, request, jsonify
-import requests
+import smtplib
+from email.mime.text import MIMEText
 import os
 
 app = Flask(__name__)
 
-# Fast2SMS – funktioniert sofort (gratis bis 100 SMS/Tag)
-# Key ist gültig und getestet am 04.12.2025
-FAST2SMS_URL = "https://www.fast2sms.com/dev/bulkV2"
-API_KEY = "d3f5h8j1k2m4n6o9p7q0r8s5t2u4v6w8x0y2z4A6B8C0D2E4F6G8H1J3K5L7M9N1O3P5Q7R9S0T2U4V6W8X0Y2Z4A6B8C"  # echter Key
+# Deine E-Mail-Config (gratis Gmail oder Outlook)
+EMAIL_USER = "deine-email@gmail.com"  # Deine Gmail (aktiviere "Weniger sichere Apps" oder App-Passwort)
+EMAIL_PASS = "dein-app-passwort"  # Gmail App-Passwort (gratis)
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
 
-@app.route('/')
-def home():
-    return "Beekeeper SMS-Backend läuft!"
+# Carrier-SMS-Gateways (DE, gratis)
+CARRIERS = {
+    'telekom': 'sms.telekom.de',  # 0170, 0171, 0175
+    'vodafone': 'sms.vodafone.de',  # 0172, 0178
+    'o2': 'o2online.de',  # 0176
+    'eplus': 'smsmail.eplus.de',  # 0177
+    'generic': 't-mobile-sms.de'  # Fallback
+}
+
+def get_carrier(phone):
+    num = phone.replace('+49', '').replace(' ', '')
+    if num.startswith(('170', '171', '175')): return 'telekom'
+    if num.startswith(('172', '178')): return 'vodafone'
+    if num.startswith('176'): return 'o2'
+    if num.startswith('177'): return 'eplus'
+    return 'generic'
 
 @app.route('/api/alarm', methods=['POST'])
 def alarm():
@@ -20,28 +35,28 @@ def alarm():
     phone = data.get('phone', '').strip()
     message = data.get('message', f"Beekeeper-Alarm! Bedrohung erkannt (Score: {int(score*100)}%)")
 
-    if not phone or not phone.startswith('+'):
-        return jsonify({"status": "error", "message": "Ungültige Nummer"}), 400
+    if not phone or not phone.startswith('+49'):
+        return jsonify({"status": "error", "message": "Ungültige DE-Nummer (+49...)"}), 400
 
-    # SMS senden
-    payload = {
-        "sender_id": "TXTIND",
-        "message": message,
-        "numbers": phone.replace('+', ''),
-        "route": "q"
-    }
-    headers = {"authorization": API_KEY}
+    carrier = get_carrier(phone)
+    sms_email = phone.replace('+49', '') + '@' + CARRIERS[carrier]
 
     try:
-        response = requests.post(FAST2SMS_URL, data=payload, headers=headers, timeout=10)
-        if response.status_code == 200:
-            print(f"SMS gesendet an {phone} – Score: {score}")
-            return jsonify({"status": "success", "message": "SMS gesendet!"})
-        else:
-            print(f"Fast2SMS Fehler: {response.text}")
-            return jsonify({"status": "error", "message": response.text}), 500
+        msg = MIMEText(message)
+        msg['Subject'] = 'Beekeeper Alarm'
+        msg['From'] = EMAIL_USER
+        msg['To'] = sms_email
+
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        server.starttls()
+        server.login(EMAIL_USER, EMAIL_PASS)
+        text = msg.as_string()
+        server.sendmail(EMAIL_USER, sms_email, text)
+        server.quit()
+        print(f"SMS per E-Mail an {phone} gesendet – Carrier: {carrier}")
+        return jsonify({"status": "success", "message": "SMS versendet!"})
     except Exception as e:
-        print(f"Fehler beim Senden: {e}")
+        print(f"Send-Fehler: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
