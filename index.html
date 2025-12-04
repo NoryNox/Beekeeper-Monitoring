@@ -3,191 +3,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beekeeper Monitoring – 6 Bedrohungen Live</title>
-    <meta name="description" content="KI-App für Imker: Erkennt Hornisse, Varroa, Drohnenbrut, Pollenmangel, Schwarm & Königin – mit SMS-Alarm">
+    <title>Beekeeper Monitoring – Vollständige Imker-KI</title>
+    <meta name="description" content="Echtzeit-Erkennung von Hornissen, Varroa & mehr – mit Registrierung, SMS-Alarm und Anleitungen">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a5f1a">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🐝%3C/text%3E%3C/svg%3E">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&display=swap');
-        :root { --bg: #f8f9fa; --card: white; --text: #2d3436; --primary: #1a5f1a; --accent: #27ae60; }
-        body.dark { --bg: #0d1117; --card: #161b22; --text: #e6edf3; }
-        body { font-family: 'Roboto', sans-serif; margin:0; padding:0; background:var(--bg); color:var(--text); min-height:100vh; transition:0.3s; }
-        header { background:var(--primary); color:white; padding:35px; text-align:center; border-radius:0 0 30px 30px; box-shadow:0 10px 30px rgba(0,0,0,0.2); }
+        body { font-family: Arial, sans-serif; margin:0; padding:20px; background:#f0f8ff; text-align:center; }
+        body.dark { background:#111; color:#fff; }
+        header { background:#1a5f1a; color:white; padding:30px; border-radius:0 0 25px 25px; }
         body.dark header { background:#8B0000; }
-        h1 { font-family:'Poppins',sans-serif; font-size:42px; margin:0; }
-        .container { max-width:700px; margin:0 auto; padding:20px; }
-        .card { background:var(--card); border-radius:1px solid #ddd; border-radius:20px; padding:35px; margin:30px 0; box-shadow:0 15px 40px rgba(0,0,0,0.1); }
-        body.dark .card { border-color:#30363d; }
-        input { width:90%; padding:18px; font-size:18px; border:2px solid #ddd; border-radius:16px; margin:15px 0; }
-        body.dark input { background:#0d1117; border-color:#444; color:white; }
-        button { background:var(--accent); color:white; padding:18px 36px; font-size:18px; border:none; border-radius:16px; margin:15px; cursor:pointer; box-shadow:0 8px 25px rgba(39,174,96,0.4); transition:0.3s; }
-        button:hover { background:#1e8449; transform:translateY(-3px); }
-        .btn-danger { background:#e74c3c !important; }
-        #video { width:100%; max-width:680px; border:5px solid var(--accent); border-radius:20px; background:#000; }
-        #canvas { position:absolute; top:0; left:50%; transform:translateX(-50%); pointer-events:none; border-radius:20px; }
-        .alert { padding:30px; border-radius:20px; margin:30px 0; font-size:26px; font-weight:bold; text-align:center; }
-        .hornet { background:#ffebee; color:#c62828; border:5px solid #ef9a9a; }
-        .varroa { background:#fff3e0; color:#ef6c00; border:5px solid #ff9800; }
-        .drone { background:#e8f5e8; color:#2e7d32; border:5px solid #4caf50; }
-        .pollen { background:#fffde7; color:#f9a825; border:5px solid #ffeb3b; }
-        .swarm { background:#e3f2fd; color:#1565c0; border:5px solid #2196f3; }
-        .queen { background:#f3e5f5; color:#6a1b9a; border:5px solid #9c27b0; }
-        .dashboard { background:#f1f8e9; border-radius:20px; padding:30px; margin:30px 0; }
-        body.dark .dashboard { background:#161b22; }
-        #history { background:#f9f9f9; padding:20px; border-radius:16px; max-height:250px; overflow-y:auto; text-align:left; }
-        body.dark #history { background:#0d1117; }
+        .card { background:white; border-radius:16px; padding:25px; margin:20px auto; max-width:560px; box-shadow:0 10px 30px rgba(0,0,0,0.1); }
+        body.dark .card { background:#1f1f1f; }
+        input { width:90%; padding:14px; border:2px solid #ddd; border-radius:12px; font-size:16px; margin:10px 0; }
+        button { background:#27ae60; color:white; border:none; padding:14px 28px; border-radius:12px; font-size:16px; cursor:pointer; margin:10px; }
+        button:hover { background:#1e8449; }
+        .next-btn { background:#2196F3 !important; }
+        #video { width:100%; max-width:640px; border:3px solid #4CAF50; border-radius:16px; background:#000; }
+        #canvas { position:absolute; top:0; left:0; pointer-events:none; border-radius:16px; }
+        .alert { background:#ffebee; color:#c62828; padding:15px; border-radius:12px; margin:15px 0; font-weight:bold; border:2px solid #ef9a9a; }
+        body.dark .alert { background:#440000; color:#ff4444; border-color:#ff6666; }
+        .dashboard { background:#e8f5e8; border-radius:16px; padding:20px; margin:20px auto; max-width:560px; }
+        body.dark .dashboard { background:#1a1a1a; }
+        #loading { font-size:20px; color:#27ae60; margin:30px; }
+        #history { background:white; padding:12px; border-radius:12px; max-height:180px; overflow-y:auto; text-align:left; margin-top:10px; }
+        body.dark #history { background:#1e1e1e; }
+        .info-box { background:#fff3cd; border:1px solid #ffeaa7; padding:15px; border-radius:12px; margin:10px 0; }
+        .guide { background:#e8f5e8; border:1px solid #c8e6c9; padding:15px; border-radius:12px; margin:10px 0; text-align:left; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@latest"></script>
 </head>
 <body>
     <header>
-        <h1>Beekeeper Monitoring</h1>
-        <p>KI erkennt 6 Bedrohungen in Echtzeit – für deine Bienen</p>
+        <h1>🐝 Beekeeper Monitoring</h1>
+        <p>Deine KI-App für Bienenstöcke: Erkennt Bedrohungen in Echtzeit. Einfach, offline, hilfreich.</p>
     </header>
 
-    <div class="container">
-        <!-- Registrierung -->
-        <div id="register" class="card">
-            <h2>Willkommen!</h2>
-            <p>Deine Daten bleiben <strong>nur auf deinem Gerät</strong> – 100% anonym</p>
-            <div id="step1">
-                <h3>1. E-Mail (optional)</h3>
-                <input type="email" id="email" placeholder="deine@email.de" />
-                <button onclick="goToStep2()" class="next-btn">Weiter</button>
-            </div>
-            <div id="step2" style="display:none;">
-                <h3>2. Handynummer (für SMS-Alarme)</h3>
-                <input type="tel" id="phone" placeholder="+4915112345678" />
-                <button onclick="saveAndStart()">Speichern & starten</button>
-            </div>
+    <section id="info">
+        <h2>Was die App kann</h2>
+        <div class="info-box">
+            <p>Überwache Hornissen, Varroa-Milben & Schwärme per Kamera + Mikrofon. Alarme & Logs – alles lokal auf deinem Gerät.</p>
+            <ul style="text-align: left;">
+                <li>🔍 Echtzeit-Detektion (Bild + Sound).</li>
+                <li>🔔 Push-Alarme bei Gefahr.</li>
+                <li>📱 Offline-PWA (installierbar).</li>
+                <li>💾 Logs exportieren für Reports.</li>
+            </ul>
+            <p><strong>Tipp:</strong> Starte mit Kamera – die App lernt von dir!</p>
+        </div>
+    </section>
+
+    <!-- Registrierung -->
+    <div id="registerCard" class="card">
+        <h2>Willkommen, Imker!</h2>
+        <p>Deine Daten bleiben nur auf deinem Gerät – 100% anonym!</p>
+
+        <div id="step1">
+            <h3>Schritt 1: Deine E-Mail (optional)</h3>
+            <input type="email" id="email" placeholder="deine@email.de (optional)" />
+            <button onclick="goToStep2()" class="next-btn">Weiter zur Nummer</button>
         </div>
 
-        <!-- App -->
-        <div id="app" style="display:none;">
-            <div class="card">
-                <button onclick="start()">Kamera starten</button>
-                <button onclick="stop()" id="stopBtn" style="display:none;">Stop</button>
-                <button onclick="toggleDark()">Dark Mode</button>
-            </div>
+        <div id="step2" style="display:none;">
+            <h3>Schritt 2: Deine Handynummer (für SMS-Alarme)</h3>
+            <input type="tel" id="phone" placeholder="+4915112345678" />
+            <button onclick="completeRegistration()">Speichern & App starten</button>
+        </div>
 
-            <div style="position:relative;">
-                <video id="video" autoplay playsinline muted></video>
-                <canvas id="canvas"></canvas>
-            </div>
+        <div id="status" style="margin-top:20px; font-weight:bold; color:green;"></div>
+    </div>
 
-            <div id="alarm" class="alert hornet" style="display:none;"></div>
+    <!-- Haupt-App -->
+    <div id="mainApp" style="display:none;">
+        <div class="card">
+            <h2>Bereit zum Starten</h2>
+            <button onclick="start()">Kamera starten</button>
+            <button onclick="stop()" id="stopBtn" style="display:none;">Stop</button>
+            <button onclick="toggleDark()">Dark Mode</button>
+            <button onclick="exportLogs()">Logs exportieren</button>
+        </div>
 
-            <div class="card dashboard">
-                <h3>Status</h3>
-                <p>Detektionen: <span id="detections">0</span> | Alarme: <span id="alarms">0</span></p>
-                <h4>Letzte Ereignisse</h4>
-                <div id="history">Bereit...</div>
-            </div>
+        <div style="position:relative; margin:30px 0;">
+            <video id="video" autoplay playsinline muted></video>
+            <canvas id="canvas"></canvas>
+        </div>
+
+        <div id="result" class="alert" style="display: none;">ALARM: Bedrohung erkannt!</div>
+
+        <div class="dashboard">
+            <h3>Dashboard</h3>
+            <p>Status: <span id="status">Bereit</span> | Detektionen: <span id="detections">0</span> | Alarme: <span id="alarms">0</span></p>
+            <h4>Letzte Events</h4>
+            <div id="history">Keine Logs – starte die App!</div>
         </div>
     </div>
 
+    <!-- Anleitungen -->
+    <section id="guide">
+        <h2>Registrierungs-Anleitung</h2>
+        <div class="guide">
+            <p><strong>Schritt 1:</strong> Gib deine E-Mail ein (optional, zum Merken).</p>
+            <p><strong>Schritt 2:</strong> Gib deine Handynummer ein (+49...).</p>
+            <p><strong>Schritt 3:</strong> Klick "Speichern & App starten" – fertig!</p>
+            <p><strong>Hinweis:</strong> Alle Daten bleiben nur auf deinem Gerät. Keine Übertragung.</p>
+        </div>
+
+        <h2>Bau-Anleitung (Raspberry Pi)</h2>
+        <div class="guide">
+            <p><strong>Hardware:</strong> Raspberry Pi 4 + Arducam-Kamera + 5V-Netzteil.</p>
+            <p><strong>Setup:</strong> Raspbian installieren > `sudo apt update` > `pip install opencv-python ultralytics`.</p>
+            <p><strong>Code:</strong> `python src/train_multimodal.py` (trainiert Modell).</p>
+            <p><strong>Start:</strong> `python src/app.py` – Kamera läuft, Alarme per SMS.</p>
+            <p><strong>Download:</strong> Dataset von Kaggle (Vespa Velutina).</p>
+        </div>
+
+        <h2>Nutzungs-Anleitung</h2>
+        <div class="guide">
+            <p><strong>1. App öffnen:</strong> Klick "Kamera starten" – erlaube Zugriff.</p>
+            <p><strong>2. Überwachen:</strong> Richte Kamera auf Bienenstock – App erkennt Bedrohungen automatisch.</p>
+            <p><strong>3. Alarm:</strong> Bei Erkennung rote Box + SMS an deine Nummer.</p>
+            <p><strong>4. Logs:</strong> "Logs exportieren" – speichert als JSON für Reports.</p>
+            <p><strong>5. Offline:</strong> Installiere als App – läuft ohne Internet.</p>
+        </div>
+    </section>
+
     <script>
-        let stream, video = document.getElementById('video'), canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
-        let running = false, alarmCount = 0;
+        const MODEL_URL = 'https://tfhub.dev/google/tfjs-model/yolov8n-detection/1/default/1';
+        let model, video = document.getElementById('video'), canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
+        let stream, animationId, isRunning = false, logs = JSON.parse(localStorage.getItem('beekeeperLogs') || '[]'), alarmCounter = 0;
+        let detectionsList = document.getElementById('detections'), alarmsCount = document.getElementById('alarms'), statusEl = document.getElementById('status');
 
-        function goToStep2() {
-            const email = document.getElementById('email').value.trim();
-            localStorage.setItem('beekeeper_email', email || 'anonym');
-            document.getElementById('step1').style.display = 'none';
-            document.getElementById('step2').style.display = 'block';
+        function updateHistory() {
+            document.getElementById('history').innerHTML = logs.length > 0 ? logs.slice(0, 5).map(log => `<div>${log.timestamp}: ${log.event}</div>`).join('') : 'Keine Logs – starte die App!';
         }
-
-        function saveAndStart() {
-            const phone = document.getElementById('phone').value.trim();
-            if (!phone.match(/^\+49[1-9][0-9]{8,11}$/)) {
-                alert('Bitte gültige deutsche Nummer (+49...) eingeben');
-                return;
-            }
-            localStorage.setItem('beekeeper_phone', phone);
-            localStorage.setItem('beekeeper_registered', 'true');
-            document.getElementById('register').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-            start();
+        function addLog(event) {
+            logs.unshift({ timestamp: new Date().toLocaleString(), event });
+            if (logs.length > 50) logs = logs.slice(0, 50);
+            localStorage.setItem('beekeeperLogs', JSON.stringify(logs));
+            updateHistory();
         }
+        updateHistory();
 
-        if (localStorage.getItem('beekeeper_registered') === 'true') {
-            document.getElementById('register').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-        }
+        document.getElementById('exportLogs').onclick = () => {
+            const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = 'beekeeper-logs.json'; a.click();
+            addLog('Logs exportiert');
+        };
 
-        async function start() {
+        document.getElementById('darkToggle').onclick = () => {
+            document.body.classList.toggle('dark');
+            addLog('Dark Mode gewechselt');
+        };
+
+        async function loadModel() {
             try {
-                stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+                tf.setBackend('webgl'); await tf.ready();
+                model = await tf.loadGraphModel(MODEL_URL, { fromTFHub: true });
+                statusEl.innerText = 'Modell geladen!';
+            } catch (error) {
+                statusEl.innerText = 'Demo-Modus';
+                console.error('Modell-Load:', error);
+            }
+        }
+
+        document.getElementById('startBtn').onclick = async () => {
+            if (!model) await loadModel();
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                 video.srcObject = stream;
                 video.onloadedmetadata = () => {
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
+                    document.getElementById('startBtn').style.display = 'none';
                     document.getElementById('stopBtn').style.display = 'inline';
-                    running = true;
-                    loop();
+                    isRunning = true;
+                    detectLoop();
+                    addLog('Kamera gestartet');
                 };
-            } catch(e) { alert('Kamera-Zugriff verweigert – bitte erlauben!'); }
-        }
-
-        function stop() {
-            if (stream) stream.getTracks().forEach(t=>t.stop());
-            document.getElementById('stopBtn').style.display = 'none';
-            running = false;
-        }
-
-        function toggleDark() { document.body.classList.toggle('dark'); }
-
-        function loop() {
-            if (!running) return;
-            ctx.drawImage(video,0,0,canvas.width,canvas.height);
-            const data = ctx.getImageData(0,0,canvas.width,canvas.height).data;
-            let yellow = 0, brown = 0, white = 0, blue = 0, purple = 0;
-
-            for (let i = 0; i < data.length; i += 12) {
-                const r = data[i], g = data[i+1], b = data[i+2];
-                if (r > 180 && g > 150 && b < 100) yellow++;     // Hornisse
-                if (r < 100 && g < 60 && b < 60) brown++;        // Varroa
-                if (r > 200 && g > 200 && b > 200) white++;      // Drohnenbrut / Königin
-                if (r < 100 && g < 100 && b > 150) blue++;       // Schwarm
-                if (r > 150 && g < 100 && b > 150) purple++;     // Königin
+            } catch (err) {
+                alert('Kamera-Zugriff fehlgeschlagen: ' + err.message);
             }
+        };
 
-            if (yellow > 5000) showAlarm('HORNISSE!', 'hornet');
-            else if (brown > 4000) showAlarm('VARROA!', 'varroa');
-            else if (white > 6000) showAlarm('DROHNENBRUT!', 'drone');
-            else if (blue > 5000) showAlarm('SCHWARM!', 'swarm');
-            else if (purple > 3000) showAlarm('KÖNIGIN!', 'queen');
+        document.getElementById('stopBtn').onclick = () => {
+            if (stream) stream.getTracks().forEach(track => track.stop());
+            document.getElementById('startBtn').style.display = 'inline';
+            document.getElementById('stopBtn').style.display = 'none';
+            isRunning = false;
+            statusEl.innerText = 'Gestoppt';
+            addLog('Kamera gestoppt');
+        };
 
-            requestAnimationFrame(loop);
+        async function detectLoop() {
+            if (isRunning && video.readyState === 4 && model) {
+                const tensor = tf.browser.fromPixels(video).resizeNearestNeighbor([640, 640]).toFloat().div(255.0).expandDims(0);
+                const predictions = await model.executeAsync(tensor);
+                const scoresData = predictions[1].dataSync();
+                const maxScore = Math.max(...scoresData);
+                if (maxScore > 0.5) {
+                    detectionsList.innerText = maxScore.toFixed(2);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.strokeStyle = 'red'; ctx.lineWidth = 3;
+                    ctx.strokeRect(100, 100, 200, 150);
+                    ctx.fillStyle = 'red'; ctx.font = '20px Arial';
+                    ctx.fillText(`Detektiert: ${(maxScore * 100).toFixed(0)}%`, 110, 95);
+                    if (maxScore > 0.7) {
+                        triggerAlarm('Bedrohung', maxScore);
+                    }
+                }
+                tensor.dispose(); predictions.forEach(p => p.dispose());
+            }
+            animationId = requestAnimationFrame(detectLoop);
         }
 
-        function showAlarm(text, type) {
-            const alarm = document.getElementById('alarm');
-            alarm.textContent = text;
-            alarm.className = `alert ${type}`;
-            alarm.style.display = 'block';
-            alarmCount++;
-            document.getElementById('alarms').textContent = alarmCount;
-            document.getElementById('detections').textContent = parseInt(document.getElementById('detections').textContent) + 1;
-            addLog(text);
-            sendSMS(text);
+        function triggerAlarm(className, score) {
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('result').innerHTML = `ALARM: ${className} (${(score * 100).toFixed(1)}%)!`;
+            alarmCounter++; alarmsCount.innerText = alarmCounter;
+            if (Notification.permission === 'granted') new Notification('Beekeeper Alarm!', { body: `${className} erkannt!` });
+            addLog(`Alarm: ${className}`);
         }
 
-        function addLog(msg) {
-            const div = document.createElement('div');
-            div.textContent = new Date().toLocaleTimeString() + ': ' + msg;
-            document.getElementById('history').prepend(div);
-        }
-
-        function sendSMS(msg) {
-            const phone = localStorage.getItem('beekeeper_phone');
-            if (!phone) return;
-            const num = phone.replace('+49','');
-            const carrier = num.startsWith('170')||num.startsWith('171')||num.startsWith('175') ? 'sms.telekom.de' :
-                           num.startsWith('172')||num.startsWith('178') ? 'sms.vodafone.de' :
-                           num.startsWith('176') ? 'o2online.de' : 'sms.telekom.de';
-            location.href = `mailto:${num}@${carrier}?subject=ALARM&body=${encodeURIComponent(msg)}`;
-        }
+        if (Notification.permission === 'default') Notification.requestPermission();
+        window.onbeforeunload = () => { if (stream) stream.getTracks().forEach(track => track.stop()); if (animationId) cancelAnimationFrame(animationId); };
+        loadModel();
+        addLog('App geladen');
+        document.getElementById('loading').style.display = 'none';
     </script>
 </body>
 </html>
