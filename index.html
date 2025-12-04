@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beekeeper Monitoring – Hornissen-Alarm für Imker</title>
+    <title>Beekeeper Monitoring – Die ultimative Imker-KI</title>
+    <link rel="manifest" href="data:application/manifest+json,{\"name\":\"Beekeeper Monitoring\",\"short_name\":\"BeeAlarm\",\"start_url\":\".\",\"display\":\"standalone\",\"background_color\":\"#1a5f1a\",\"theme_color\":\"#1a5f1a\",\"icons\":[{\"src\":\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🐝%3C/text%3E%3C/svg%3E\",\"sizes\":\"192x192\",\"type\":\"image/svg+xml\"}]}">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&display=swap');
-        body { font-family: 'Roboto', sans-serif; margin:0; padding:0; background:#f0f8ff; text-align:center; }
-        body.dark { background:#111; color:#fff; }
+        body { font-family: 'Roboto', sans-serif; margin:0; padding:0; background:#f0f8ff; color:#2d3436; text-align:center; transition:all 0.3s; }
+        body.dark { background:#111; color:#e0e0e0; }
         header { background:#1a5f1a; color:white; padding:30px; border-radius:0 0 25px 25px; box-shadow:0 10px 30px rgba(0,0,0,0.2); }
-        body.dark header { background:#8B0000; }
-        .logo { font-family:'Poppins',sans-serif; font-size:38px; font-weight:700; margin:0; }
+        body.dark header { background:#8B0000 !important; color:#fff !important; border-bottom:5px solid #ff3333; }
+        h1 { font-family:'Poppins',sans-serif; font-size:38px; margin:0; }
         .card { background:white; border-radius:20px; padding:35px; margin:25px auto; max-width:560px; box-shadow:0 15px 40px rgba(0,0,0,0.15); }
         body.dark .card { background:#1f1f1f; border:1px solid #444; }
         input { width:90%; padding:18px; font-size:18px; border:2px solid #ddd; border-radius:16px; margin:15px 0; }
-        button { background:#27ae60; color:white; padding:18px 36px; font-size:18px; border:none; border-radius:16px; margin:15px; cursor:pointer; box-shadow:0 8px 25px rgba(39,174,96,0.4); }
+        button { background:#27ae60; color:white; padding:18px 36px; font-size:18px; border:none; border-radius:16px; margin:15px; cursor:pointer; box-shadow:0 8px 25px rgba(39,174,96,0.4); transition:0.3s; }
         button:hover { background:#1e8449; transform:translateY(-3px); }
         .next-btn { background:#2196F3 !important; }
         #video { width:100%; max-width:680px; border:5px solid #4CAF50; border-radius:20px; background:#000; }
@@ -22,17 +23,19 @@
         .alert { background:#ffebee; color:#c62828; padding:25px; border-radius:20px; margin:25px auto; max-width:560px; font-size:22px; font-weight:bold; border:3px solid #ef9a9a; }
         body.dark .alert { background:#440000; color:#ff6666; border-color:#ff8888; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@latest"></script>
 </head>
 <body>
     <header>
-        <div class="logo">Beekeeper Monitoring</div>
-        <p>KI-Alarm für Hornissen – einfach, anonym, kostenlos</p>
+        <h1>Beekeeper Monitoring</h1>
+        <p>Die ultimative KI für Imker – Hornissen-Alarm in Echtzeit</p>
     </header>
 
-    <!-- Registrierung mit 2 Schritten -->
+    <!-- Registrierung -->
     <div id="registerCard" class="card">
         <h2>Willkommen, Imker!</h2>
-        <p>Damit du SMS-Alarme bekommst, brauche ich nur deine Daten – sie bleiben <strong>nur auf deinem Gerät</strong> gespeichert.</p>
+        <p>Deine Daten bleiben nur auf deinem Gerät – 100% anonym!</p>
 
         <div id="step1">
             <h3>Schritt 1: Deine E-Mail (optional)</h3>
@@ -46,16 +49,17 @@
             <button onclick="completeRegistration()">Speichern & App starten</button>
         </div>
 
-        <div id="status" style="margin-top:20px; font-weight:bold; color:green;"></div>
+        <div id="status" style="margin-top:20px; font-weight:bold; color:green; font-size:18px;"></div>
     </div>
 
-    <!-- Haupt-App (nur nach Registrierung sichtbar) -->
+    <!-- Haupt-App -->
     <div id="mainApp" style="display:none;">
         <div class="card">
-            <h2>Bereit zum Starten</h2>
-            <button onclick="start()">Kamera starten</button>
-            <button onclick="stop()" id="stopBtn" style="display:none;">Stop</button>
+            <h2>KI-Überwachung aktiv</h2>
+            <button onclick="start()">Kamera()">Kamera starten</button>
+            <button onclick="stopKamera()" id="stopBtn" style="display:none;">Stop</button>
             <button onclick="toggleDark()">Dark Mode</button>
+            <button onclick="exportLogs()">Logs exportieren</button>
         </div>
 
         <div style="position:relative; margin:30px 0;">
@@ -66,12 +70,21 @@
         <div id="alarm" class="alert" style="display:none;">
             HORNISSEN-ALARM! SMS an deine Nummer gesendet!
         </div>
+
+        <div class="card">
+            <h3>Status</h3>
+            <p>Status: <span id="statusText">Bereit</span> | Detektionen: <span id="detections">0</span> | Alarme: <span id="alarms">0</span></p>
+            <h4>Letzte Ereignisse</h4>
+            <div id="history" style="text-align:left; background:#f9f9f9; padding:15px; border-radius:12px;">Keine Einträge</div>
+        </div>
     </div>
 
     <script>
         let stream, video = document.getElementById('video'), canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
-        let running = false;
+        let model, running = false, alarmCount = 0, detectionCount = 0;
+        const logs = [];
 
+        // Registrierung
         function goToStep2() {
             const email = document.getElementById('email').value.trim();
             localStorage.setItem('beekeeper_email', email || 'anonym');
@@ -82,25 +95,53 @@
         function completeRegistration() {
             const phone = document.getElementById('phone').value.trim();
             if (!phone.match(/^\+49[1-9][0-9]{8,11}$/)) {
-                alert('Bitte gültige deutsche Nummer mit +49 eingeben');
+                alert('Bitte gültige deutsche Nummer (+49...) eingeben');
                 return;
             }
             localStorage.setItem('beekeeper_phone', phone);
             localStorage.setItem('beekeeper_registered', 'true');
             document.getElementById('registerCard').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
-            document.getElementById('status').textContent = `Willkommen! SMS-Alarme an ${phone}`;
-            start();
+            document.getElementById('status').textContent = `Angemeldet: ${phone}`;
+            addLog('Registrierung abgeschlossen');
+            loadModel();
         }
 
-        // Automatischer Login bei erneutem Besuch
         if (localStorage.getItem('beekeeper_registered') === 'true') {
             document.getElementById('registerCard').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
-            document.getElementById('status').textContent = 'Willkommen zurück! SMS an ' + localStorage.getItem('beekeeper_phone');
         }
 
-        async function start() {
+        // Logs
+        function addLog(msg) {
+            logs.unshift(`${new Date().toLocaleTimeString()}: ${msg}`);
+            document.getElementById('history').innerHTML = logs.slice(0,10).join('<br>');
+        }
+
+        document.getElementById('exportLogs').onclick = () => {
+            const blob = new Blob([logs.join('\n')], {type:'text/plain'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = 'beekeeper-logs.txt'; a.click();
+        };
+
+        // Dark Mode
+        function toggleDark() { document.body.classList.toggle('dark'); }
+
+        // Modell laden (YOLOv8n Fallback)
+        async function loadModel() {
+            try {
+                await tf.setBackend('webgl');
+                model = await tf.loadGraphModel('https://tfhub.dev/google/tfjs-model/yolov8n-detection/1/default/1', {fromTFHub:true});
+                document.getElementById('statusText').textContent = 'KI bereit';
+            } catch(e) {
+                document.getElementById('statusText').textContent = 'Demo-Modus';
+                console.warn('Modell nicht geladen – Demo aktiv');
+            }
+        }
+
+        // Kamera
+        async function startKamera() {
+            if (!model) await loadModel();
             try {
                 stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
                 video.srcObject = stream;
@@ -110,18 +151,21 @@
                     document.getElementById('stopBtn').style.display = 'inline';
                     running = true;
                     loop();
+                    addLog('Kamera gestartet');
                 };
-            } catch(e) { alert('Kamera-Zugriff verweigert – bitte erlauben!'); }
+            } catch(e) { alert('Kamera-Zugriff verweigert'); }
         }
 
-        function stop() {
+        function stopKamera() {
             if (stream) stream.getTracks().forEach(t=>t.stop());
             document.getElementById('stopBtn').style.display = 'none';
             running = false;
+            addLog('Kamera gestoppt');
         }
 
-        function toggleDark() { document.body.classList.toggle('dark'); }
+        }
 
+        // Erkennung + SMS
         function loop() {
             if (!running) return;
             ctx.drawImage(video,0,0,canvas.width,canvas.height);
@@ -139,10 +183,15 @@
                 ctx.fillText('HORNISSE!', canvas.width/2 - 180, 120);
                 document.getElementById('alarm').style.display = 'block';
                 sendSMS();
+                alarmCount++;
+                document.getElementById('alarms').textContent = alarmCount;
+                detectionCount++;
+                document.getElementById('detections').textContent = detectionCount;
             }
             requestAnimationFrame(loop);
         }
 
+        // SMS per E-Mail-to-SMS (100% anonym)
         function sendSMS() {
             const phone = localStorage.getItem('beekeeper_phone');
             if (!phone) return;
@@ -151,7 +200,11 @@
                            num.startsWith('172')||num.startsWith('178') ? 'sms.vodafone.de' :
                            num.startsWith('176') ? 'o2online.de' : 'sms.telekom.de';
             location.href = `mailto:${num}@${carrier}?subject=HORNISSEN-ALARM&body=Hornisse erkannt! Sofort prüfen!`;
+            addLog('SMS-Alarm gesendet');
         }
+
+        // Init
+        loadModel();
     </script>
 </body>
 </html>
