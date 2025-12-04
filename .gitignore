@@ -1,23 +1,9 @@
-# Ignore finder files
-.DS_store
-
-# Ignore jpg files
-# *.jpg
-
-# Ignore venv
-.vespCVenv
-
-# Ignore data (stored on https://www.kaggle.com/datasets/marcoryvandijk/vespa-velutina-v-crabro-vespulina-vulgaris)
-data100/
-data3000/
-vespcv-data3000-e200-b32/
-test/
-
-# Ignore yolov10 files (git clone https://github.com/THU-MIG/yolov10.git)
-yolov10/
-
-# Ignore powerpoint pptx
-*.pptx
-
-# Ignore movie
-yolov8sTest.mov
+# Nicht hochladen
+node_modules
+__pycache__
+*.pyc
+.env
+.DS_Store
+*.log
+data/
+models/*.bin
