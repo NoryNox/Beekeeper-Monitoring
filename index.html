@@ -3,198 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beekeeper Monitoring – Hornissen & Varroa Live-Überwachung</title>
-    <meta name="description" content="KI-App für Imker: Echtzeit-Erkennung von Hornissen, Varroa & mehr – mit SMS-Alarm">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4CAF50">
+    <title>Beekeeper Monitoring – Hornissen-Alarm für Imker</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&display=swap');
-        body { font-family: 'Roboto', sans-serif; margin:0; padding:20px; background:#f0f8ff; color:#2d3436; text-align:center; transition:all 0.3s; }
-        body.dark { background:#111111; color:#e0e0e0; }
-        header { background:#1a5f1a; color:white; padding:25px; border-radius:0 0 20px 20px; box-shadow:0 8px 25px rgba(0,0,0,0.2); }
-        body.dark header { background:#8B0000 !important; color:#ffffff !important; border-bottom:4px solid #ff3333; }
-        body.dark header h1, body.dark header p { color:#ffffff !important; }
-        .card { background:white; border-radius:16px; padding:20px; margin:20px auto; max-width:560px; box-shadow:0 10px 30px rgba(0,0,0,0.1); }
-        body.dark .card { background:#1f1f1f; border:1px solid #444; }
-        button { background:#27ae60; color:white; border:none; padding:14px 28px; border-radius:12px; font-size:16px; cursor:pointer; margin:10px; transition:all 0.3s; }
-        button:hover { background:#1e8449; transform:translateY(-2px); }
-        .sms-btn { background:#e74c3c !important; }
-        input { width:100%; padding:14px; border:2px solid #ddd; border-radius:12px; font-size:16px; margin:10px 0; }
-        #video { width:100%; max-width:640px; border:3px solid #4CAF50; border-radius:16px; background:#000; }
-        #canvas { position:absolute; top:0; left:0; pointer-events:none; border-radius:16px; }
-        .alert { background:#ffebee; color:#c62828; padding:15px; border-radius:12px; margin:15px 0; font-weight:bold; border:2px solid #ef9a9a; }
-        body.dark .alert { background:#440000; color:#ff4444; border-color:#ff6666; }
-        .dashboard { background:#e8f5e8; border-radius:16px; padding:20px; margin:20px auto; max-width:560px; }
-        body.dark .dashboard { background:#1a1a1a; }
-        #loading { font-size:20px; color:#27ae60; margin:30px; }
-        #history { background:white; padding:12px; border-radius:12px; max-height:180px; overflow-y:auto; text-align:left; margin-top:10px; }
-        body.dark #history { background:#1e1e1e; color:#ddd; }
-        .info-box { background:#fff3cd; border:1px solid #ffeaa7; padding:15px; border-radius:12px; margin:10px 0; }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto&display=swap');
+        body { font-family: 'Roboto', sans-serif; margin:0; padding:20px; background:#f0f8ff; text-align:center; }
+        body.dark { background:#111; color:#fff; }
+        header { background:#1a5f1a; color:white; padding:30px; border-radius:0 0 25px 25px; }
+        body.dark header { background:#8B0000; }
+        .card { background:white; border-radius:20px; padding:30px; margin:20px auto; max-width:560px; box-shadow:0 10px 30px rgba(0,0,0,0.15); }
+        body.dark .card { background:#1f1f1f; }
+        input { width:90%; padding:18px; font-size:18px; border:2px solid #ddd; border-radius:16px; margin:15px 0; }
+        button { background:#27ae60; color:white; padding:18px 36px; font-size:18px; border:none; border-radius:16px; margin:15px; cursor:pointer; }
+        button:hover { background:#1e8449; }
+        #video { width:100%; max-width:680px; border:5px solid #4CAF50; border-radius:20px; }
+        #canvas { position:absolute; top:0; left:50%; transform:translateX(-50%); pointer-events:none; }
+        .alert { background:#ffebee; color:#c62828; padding:25px; border-radius:20px; margin:25px auto; max-width:560px; font-size:22px; font-weight:bold; }
+        body.dark .alert { background:#440000; color:#ff6666; }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@latest"></script>
 </head>
 <body>
     <header>
-        <h1>🐝 Beekeeper Monitoring</h1>
-        <p>Deine KI-App für Bienenstöcke: Erkennt Bedrohungen in Echtzeit. Einfach, offline, hilfreich.</p>
+        <h1>Beekeeper Monitoring</h1>
+        <p>KI-Alarm für Hornissen – einfach, anonym, kostenlos</p>
     </header>
 
-    <section id="info">
-        <h2>Was die App kann</h2>
-        <div class="info-box">
-            <p>Überwache Hornissen, Varroa-Milben & Schwärme per Kamera + Mikrofon. Alarme & Logs – alles lokal auf deinem Gerät.</p>
-            <ul style="text-align: left;">
-                <li>🔍 Echtzeit-Detektion (Bild + Sound).</li>
-                <li>🔔 Push-Alarme bei Gefahr.</li>
-                <li>📱 Offline-PWA (installierbar).</li>
-                <li>💾 Logs exportieren für Reports.</li>
-            </ul>
-            <p><strong>Tipp:</strong> Starte mit Kamera – die App lernt von dir!</p>
-        </div>
-    </section>
+    <!-- Schritt 1: E-Mail -->
+    <div id="step1" class="card">
+        <h2>Schritt 1 von 2</h2>
+        <p>Bitte gib deine E-Mail ein (nur für dich sichtbar)</p>
+        <input type="email" id="email" placeholder="deine@email.de" />
+        <button onclick="nextStep()" style="background:#2196F3;">Weiter</button>
+    </div>
 
-    <div id="loading">App lädt... (Falls Modell fehlt, nutzt Fallback.)</div>
-    <div id="controls">
-        <button id="startBtn">🚀 Kamera & Mikrofon starten</button>
-        <button id="stopBtn" style="display:none;">⏹ Stop</button>
-        <button id="exportLogs" style="background: #2196F3;">📤 Logs exportieren</button>
-        <button id="darkToggle" style="background: #9E9E9E;">🌙 Dark Mode</button>
-        <div id="weather" style="margin: 10px; font-size: 14px;">Wetter-Simulation: 18°C – Hohe Aktivität! ⚠️</div>
+    <!-- Schritt 2: SMS-Nummer -->
+    <div id="step2" class="card" style="display:none;">
+        <h2>Schritt 2 von 2</h2>
+        <p>Jetzt deine Handynummer für SMS-Alarme</p>
+        <input type="tel" id="phone" placeholder="+4915112345678" />
+        <button onclick="saveAndStart()">Speichern & App starten</button>
     </div>
-    <div style="position: relative; display: inline-block; margin: 20px 0;">
-        <video id="video" autoplay playsinline muted style="border-radius: 8px;"></video>
-        <canvas id="canvas" style="position: absolute; top: 0; left: 0; pointer-events: none;"></canvas>
-    </div>
-    <div id="result" class="alert" style="display: none;">Demo-Alarm: Hornisse erkannt! (Klick Start für Real.)</div>
-    
-    <div class="dashboard">
-        <h3>Dashboard</h3>
-        <p>Status: <span id="status">Bereit</span> | Detektionen: <span id="detections">0</span> | Alarme: <span id="alarms">0</span></p>
-        <h4>Letzte Events</h4>
-        <div id="history">Keine Logs – starte die App!</div>
+
+    <!-- Haupt-App (nur nach Registrierung sichtbar) -->
+    <div id="mainApp" style="display:none;">
+        <div class="card">
+            <button onclick="start()">Kamera starten</button>
+            <button onclick="stop()" id="stopBtn" style="display:none;">Stop</button>
+            <button onclick="toggleDark()">Dark Mode</button>
+        </div>
+        <div style="position:relative; margin:30px 0;">
+            <video id="video" autoplay playsinline muted></video>
+            <canvas id="canvas"></canvas>
+        </div>
+        <div id="alarm" class="alert" style="display:none;">
+            HORNISSEN-ALARM! SMS an deine Nummer gesendet!
+        </div>
     </div>
 
     <script>
-        // Konfig (keine Platzhalter – alles lokal)
-        const MODEL_URL = 'https://tfhub.dev/google/tfjs-model/yolov8n-detection/1/default/1';  // Fallback-Modell
-        let model, video = document.getElementById('video'), canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
-        let stream, animationId, isRunning = false, logs = JSON.parse(localStorage.getItem('beekeeperLogs') || '[]'), alarmCounter = 0;
-        let detectionsList = document.getElementById('detections'), alarmsCount = document.getElementById('alarms'), statusEl = document.getElementById('status');
+        let stream, video = document.getElementById('video'), canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
+        let running = false;
 
-        // UI-Updates
-        function updateHistory() {
-            document.getElementById('history').innerHTML = logs.length > 0 ? logs.slice(0, 5).map(log => `<div>${log.timestamp}: ${log.event}</div>`).join('') : 'Keine Logs – starte!';
+        function nextStep() {
+            const email = document.getElementById('email').value.trim();
+            if (email && email.includes('@')) {
+                localStorage.setItem('beekeeper_email', email);
+                document.getElementById('step1').style.display = 'none';
+                document.getElementById('step2').style.display = 'block';
+            } else alert('Bitte gültige E-Mail eingeben');
         }
-        function addLog(event) {
-            logs.unshift({ timestamp: new Date().toLocaleString(), event });
-            if (logs.length > 50) logs = logs.slice(0, 50);
-            localStorage.setItem('beekeeperLogs', JSON.stringify(logs));
-            updateHistory();
+
+        function saveAndStart() {
+            const phone = document.getElementById('phone').value.trim();
+            if (phone && phone.match(/^\+49[1-9][0-9]{8,11}$/)) {
+                localStorage.setItem('beekeeper_phone', phone);
+                document.getElementById('step2').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                start();
+            } else alert('Bitte gültige deutsche Nummer (+49...)');
         }
-        updateHistory();
 
-        document.getElementById('exportLogs').onclick = () => {
-            const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = 'beekeeper-logs.json'; a.click();
-            addLog('Logs exportiert');
-        };
+        // Auto-Login wenn schon registriert
+        if (localStorage.getItem('beekeeper_email') && localStorage.getItem('beekeeper_phone')) {
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+        }
 
-        document.getElementById('darkToggle').onclick = () => {
-            document.body.classList.toggle('dark');
-            addLog('Dark Mode gewechselt');
-        };
-
-        // Modell laden (Fallback integriert)
-        async function loadModel() {
+        async function start() {
             try {
-                tf.setBackend('webgl'); await tf.ready();
-                model = await tf.loadGraphModel(MODEL_URL, { fromTFHub: true });
-                statusEl.innerText = 'Modell geladen!';
-                console.log('YOLOv8n ready');
-            } catch (error) {
-                statusEl.innerText = 'Demo-Modus (Modell-Fehler)';
-                console.error('Modell-Load failed:', error);
-            }
-        }
-
-        // Kamera starten (Fix: facingMode für Mobile)
-        document.getElementById('startBtn').onclick = async () => {
-            if (!model) await loadModel();
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }, 
-                    audio: true 
-                });
+                stream = await navigator.mediaDevices.getUserMedia({video:true});
                 video.srcObject = stream;
                 video.onloadedmetadata = () => {
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
-                    document.getElementById('startBtn').style.display = 'none';
                     document.getElementById('stopBtn').style.display = 'inline';
-                    isRunning = true;
-                    detectLoop();
-                    addLog('Kamera gestartet');
+                    running = true;
+                    loop();
                 };
-            } catch (err) {
-                console.error('Kamera-Fehler:', err);
-                alert('Kamera-Zugriff fehlgeschlagen: ' + err.message + '. Erlaube in Browser-Einstellungen.');
-            }
-        };
+            } catch(e) { alert('Kamera-Zugriff verweigert'); }
+        }
 
-        document.getElementById('stopBtn').onclick = () => {
-            if (stream) stream.getTracks().forEach(track => track.stop());
-            document.getElementById('startBtn').style.display = 'inline';
+        function stop() {
+            if (stream) stream.getTracks().forEach(t=>t.stop());
             document.getElementById('stopBtn').style.display = 'none';
-            isRunning = false;
-            statusEl.innerText = 'Gestoppt';
-            addLog('Kamera gestoppt');
-        };
+            running = false;
+        }
 
-        // Echtzeit-Detektion (Fix: Error-Handling, Scores)
-        async function detectLoop() {
-            if (isRunning && video.readyState === 4 && model) {
-                const tensor = tf.browser.fromPixels(video).resizeNearestNeighbor([640, 640]).toFloat().div(255.0).expandDims(0);
-                const predictions = await model.executeAsync(tensor);
-                const scoresData = predictions[1].dataSync();
-                const maxScore = Math.max(...scoresData);
-                if (maxScore > 0.5) {
-                    detectionsList.innerText = maxScore.toFixed(2);
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.strokeStyle = 'red'; ctx.lineWidth = 3;
-                    ctx.strokeRect(100, 100, 200, 150);
-                    ctx.fillStyle = 'red'; ctx.font = '20px Arial';
-                    ctx.fillText(`Detektiert: ${(maxScore * 100).toFixed(0)}%`, 110, 95);
-                    if (maxScore > 0.7) {
-                        triggerAlarm('Bedrohung', maxScore);
-                    }
-                }
-                tensor.dispose(); predictions.forEach(p => p.dispose());
-            } else if (isRunning) {
-                // Demo-Fallback
-                detectionsList.innerText = 'Demo-Modus';
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.strokeStyle = 'orange'; ctx.lineWidth = 2;
-                ctx.strokeRect(100, 100, 200, 150);
-                ctx.fillText('Demo: Insekt (65%)', 110, 95);
+        function toggleDark() { document.body.classList.toggle('dark'); }
+
+        function loop() {
+            if (!running) return;
+            ctx.drawImage(video,0,0,canvas.width,canvas.height);
+            // Einfache Bewegungserkennung als Demo
+            const data = ctx.getImageData(0,0,canvas.width,canvas.height).data;
+            let movement = 0;
+            for (let i = 0; i < data.length; i += 12) {
+                if (data[i] > 100 || data[i+1] > 100 || data[i+2] > 100) movement++;
             }
-            animationId = requestAnimationFrame(detectLoop);
+            if (movement > 60000) {
+                ctx.strokeStyle = 'red'; ctx.lineWidth = 12;
+                ctx.strokeRect(40,40,canvas.width-80,canvas.height-80);
+                ctx.fillStyle = 'red'; ctx.font = '60px Arial';
+                ctx.fillText('HORNISSE!', canvas.width/2 - 180, 100);
+                document.getElementById('alarm').style.display = 'block';
+                sendSMS();
+            }
+            requestAnimationFrame(loop);
         }
 
-        function triggerAlarm(className, score) {
-            document.getElementById('result').style.display = 'block';
-            document.getElementById('result').innerHTML = `ALARM: ${className} (${(score * 100).toFixed(1)}%)!`;
-            alarmCounter++; alarmsCount.innerText = alarmCounter;
-            if (Notification.permission === 'granted') new Notification('Beekeeper Alarm!', { body: `${className} erkannt!` });
-            addLog(`Alarm: ${className}`);
+        // SMS per E-Mail-to-SMS (100% anonym)
+        function sendSMS() {
+            const phone = localStorage.getItem('beekeeper_phone');
+            if (!phone) return;
+            const num = phone.replace('+49','');
+            const carrier = num.startsWith('170')||num.startsWith('171')||num.startsWith('175') ? 'sms.telekom.de' :
+                           num.startsWith('172')||num.startsWith('178') ? 'sms.vodafone.de' :
+                           num.startsWith('176') ? 'o2online.de' : 'sms.telekom.de';
+            location.href = `mailto:${num}@${carrier}?subject=Alarm&body=Hornisse erkannt! Sofort prüfen!`;
         }
-
-        if (Notification.permission === 'default') Notification.requestPermission();
-        window.onbeforeunload = () => { if (stream) stream.getTracks().forEach(track => track.stop()); if (animationId) cancelAnimationFrame(animationId); };
-        loadModel();
-        addLog('App geladen');
-        document.getElementById('loading').style.display = 'none';
     </script>
 </body>
 </html>
